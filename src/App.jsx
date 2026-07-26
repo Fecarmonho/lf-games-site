@@ -73,8 +73,8 @@ const CSS = `
     --radius-sm: 9px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; width: 100%; max-width: 100vw; }
   h1,h2,h3,h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; margin: 0; }
   a { color: inherit; text-decoration: none; }
   img { max-width: 100%; display: block; }
