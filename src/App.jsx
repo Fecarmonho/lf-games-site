@@ -91,13 +91,19 @@ const CSS = `
   .topbar-cta:hover { background: var(--accent2); }
   @media (max-width: 780px) { .topbar-nav { display: none; } }
 
-  .hero { position: relative; overflow: hidden; padding: 90px 24px 70px; text-align: center; background:
-      radial-gradient(circle at 20% 10%, rgba(255,45,77,0.14), transparent 45%),
-      radial-gradient(circle at 85% 30%, rgba(62,166,255,0.10), transparent 40%); }
-  .hero-logo { width: 230px; height: auto; object-fit: contain; margin: 0 auto 10px; filter: drop-shadow(0 0 30px rgba(255,45,77,0.4)); }
-  .hero h1 { font-size: clamp(40px, 7vw, 76px); line-height: 0.95; }
+  .hero { position: relative; overflow: hidden; padding: 46px 24px 40px; text-align: center;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255,45,77,0.20), transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(62,166,255,0.14), transparent 40%),
+        linear-gradient(180deg, rgba(9,9,11,0.70) 0%, rgba(9,9,11,0.95) 100%),
+        url(${storeHeroImg});
+      background-repeat: no-repeat;
+      background-position: center, center, center, center 30%;
+      background-size: auto, auto, auto, cover; }
+  .hero-logo { width: 130px; height: auto; object-fit: contain; margin: 0 auto 4px; filter: drop-shadow(0 0 30px rgba(255,45,77,0.4)); }
+  .hero h1 { font-size: clamp(30px, 5.5vw, 56px); line-height: 0.95; }
   .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--text2); font-size: 16px; max-width: 480px; margin: 16px auto 30px; }
+  .hero p { color: var(--text2); font-size: 14px; max-width: 460px; margin: 10px auto 20px; }
   .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: transform .15s ease, background .15s ease; }
   .btn:hover { transform: translateY(-2px); }
@@ -114,8 +120,6 @@ const CSS = `
   .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 26px; flex-wrap: wrap; gap: 10px; }
   .section-title { font-size: 32px; }
   .section-sub { color: var(--text2); font-size: 14px; }
-  .store-banner { margin: 20px 0 10px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border2); }
-  .store-banner img { width: 100%; height: auto; max-height: 320px; object-fit: cover; display: block; }
 
   .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
   .chip { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border2); font-size: 13px; color: var(--text2); cursor: pointer; background: var(--surface); white-space: nowrap; }
@@ -334,10 +338,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      <div className="wrap">
-        <div className="store-banner"><img src={storeHeroImg} alt="LF Games Store & Arcade" /></div>
-      </div>
 
       <div className="wrap section" id="catalogo">
         <div className="section-head" id="categorias">
