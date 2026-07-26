@@ -23,9 +23,10 @@ const auth = getAuth(app);
 // DADOS DA LOJA — edite aqui
 // ─────────────────────────────────────────────
 const WHATSAPP_NUMERO = "5515998134273"; // (15) 99813-4273
-const INSTAGRAM_USUARIO = "lfgames"; // TODO: trocar pelo @ real do Instagram
+const INSTAGRAM_USUARIO = "larissa_felipe_lf_games";
 const ENDERECO_TEXTO = "Votorantim - SP";
 const ENDERECO_MAPA_QUERY = "Votorantim, SP";
+const LOJA_ML_URL = "https://lista.mercadolivre.com.br/_CustId_58266088";
 
 const CATEGORIAS_PRODUTO = [
   "PlayStation", "Xbox", "Nintendo", "PC Gamer", "Jogos", "Controles",
@@ -184,6 +185,7 @@ function TopBar() {
         <nav className="topbar-nav">
           <a href="#catalogo">Catálogo</a>
           <a href="#categorias">Categorias</a>
+          <a href={LOJA_ML_URL} target="_blank" rel="noreferrer">Mercado Livre</a>
           <a href="#contato">Contato</a>
         </nav>
         <a className="topbar-cta" href={linkWhatsAppGeral()} target="_blank" rel="noreferrer">💬 WhatsApp</a>
@@ -201,6 +203,7 @@ function Hero() {
       <div className="hero-ctas">
         <a className="btn btn-primary" href="#catalogo">Ver catálogo</a>
         <a className="btn btn-outline" href={linkWhatsAppGeral()} target="_blank" rel="noreferrer">Falar no WhatsApp</a>
+        <a className="btn btn-outline" href={LOJA_ML_URL} target="_blank" rel="noreferrer">Loja no Mercado Livre</a>
         <a className="btn btn-outline" href={`https://instagram.com/${INSTAGRAM_USUARIO}`} target="_blank" rel="noreferrer">Seguir no Instagram</a>
       </div>
     </div>
@@ -246,6 +249,7 @@ function Footer() {
         <div className="footer-col">
           <h4>Contato</h4>
           <a className="footer-link" href={linkWhatsAppGeral()} target="_blank" rel="noreferrer">💬 WhatsApp</a>
+          <a className="footer-link" href={LOJA_ML_URL} target="_blank" rel="noreferrer">🛒 Loja no Mercado Livre</a>
           <a className="footer-link" href={`https://instagram.com/${INSTAGRAM_USUARIO}`} target="_blank" rel="noreferrer">📷 Instagram</a>
           <div className="footer-link">📍 {ENDERECO_TEXTO}</div>
         </div>
