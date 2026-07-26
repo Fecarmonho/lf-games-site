@@ -3,6 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot } from "firebase/firestore";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 import logoImg from "./logo.png";
+import storeHeroImg from "./store-hero.jpg";
+import mascoteImg from "./mascote.png";
 
 // ─────────────────────────────────────────────
 // FIREBASE (mesmo projeto do ERP — leitura de produtos em tempo real)
@@ -26,7 +28,7 @@ const WHATSAPP_NUMERO = "5515998134273"; // (15) 99813-4273
 const INSTAGRAM_USUARIO = "larissa_felipe_lf_games";
 const ENDERECO_TEXTO = "Votorantim - SP";
 const ENDERECO_MAPA_QUERY = "Votorantim, SP";
-const LOJA_ML_URL = "https://lista.mercadolivre.com.br/_CustId_58266088";
+const LOJA_ML_URL = "https://lista.mercadolivre.com.br/_CustId_3321049824";
 
 const CATEGORIAS_PRODUTO = [
   "PlayStation", "Xbox", "Nintendo", "PC Gamer", "Jogos", "Controles",
@@ -89,9 +91,15 @@ const CSS = `
   .topbar-cta:hover { background: var(--accent2); }
   @media (max-width: 780px) { .topbar-nav { display: none; } }
 
-  .hero { position: relative; overflow: hidden; padding: 90px 24px 70px; text-align: center; background:
-      radial-gradient(circle at 20% 10%, rgba(255,45,77,0.14), transparent 45%),
-      radial-gradient(circle at 85% 30%, rgba(62,166,255,0.10), transparent 40%); }
+  .hero { position: relative; overflow: hidden; padding: 90px 24px 70px; text-align: center;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255,45,77,0.20), transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(62,166,255,0.14), transparent 40%),
+        linear-gradient(180deg, rgba(9,9,11,0.65) 0%, rgba(9,9,11,0.94) 100%),
+        url(${storeHeroImg});
+      background-repeat: no-repeat;
+      background-position: center, center, center, center 30%;
+      background-size: auto, auto, auto, cover; }
   .hero-logo { width: 110px; height: 110px; object-fit: contain; margin: 0 auto 18px; filter: drop-shadow(0 0 30px rgba(255,45,77,0.4)); }
   .hero h1 { font-size: clamp(40px, 7vw, 76px); line-height: 0.95; }
   .hero h1 span { color: var(--accent); }
@@ -112,6 +120,8 @@ const CSS = `
   .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 26px; flex-wrap: wrap; gap: 10px; }
   .section-title { font-size: 32px; }
   .section-sub { color: var(--text2); font-size: 14px; }
+  .destaques-mascote { width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255,45,77,0.3)); align-self: flex-end; margin-bottom: -18px; }
+  @media (max-width: 700px) { .destaques-mascote { display: none; } }
 
   .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
   .chip { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border2); font-size: 13px; color: var(--text2); cursor: pointer; background: var(--surface); white-space: nowrap; }
@@ -324,6 +334,7 @@ export default function App() {
         <div className="wrap section" id="destaques">
           <div className="section-head">
             <div><h2 className="section-title">Destaques</h2><p className="section-sub">Selecionados pra você</p></div>
+            <img src={mascoteImg} alt="" aria-hidden="true" className="destaques-mascote" />
           </div>
           <div className="featured-row">
             {destaques.map(p => <ProductCard key={p.id} p={p} />)}
