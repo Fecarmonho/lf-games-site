@@ -91,7 +91,7 @@ const CSS = `
   .topbar-cta:hover { background: var(--accent2); }
   @media (max-width: 780px) { .topbar-nav { display: none; } }
 
-  .hero { position: relative; overflow: hidden; padding: 46px 24px 40px; text-align: center;
+  .hero { position: relative; overflow: hidden; padding: 26px 24px 30px; text-align: center;
       background:
         radial-gradient(circle at 20% 10%, rgba(255,45,77,0.20), transparent 45%),
         radial-gradient(circle at 85% 30%, rgba(62,166,255,0.14), transparent 40%),
@@ -100,10 +100,10 @@ const CSS = `
       background-repeat: no-repeat;
       background-position: center, center, center, center 30%;
       background-size: auto, auto, auto, cover; }
-  .hero-logo { width: 130px; height: auto; object-fit: contain; margin: 0 auto 4px; filter: drop-shadow(0 0 30px rgba(255,45,77,0.4)); }
-  .hero h1 { font-size: clamp(30px, 5.5vw, 56px); line-height: 0.95; }
+  .hero-logo { width: 230px; height: auto; object-fit: contain; margin: 0 auto 2px; filter: drop-shadow(0 0 30px rgba(255,45,77,0.4)); }
+  .hero h1 { font-size: clamp(36px, 6.5vw, 68px); line-height: 0.92; }
   .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--text2); font-size: 14px; max-width: 460px; margin: 10px auto 20px; }
+  .hero p { color: var(--text2); font-size: 15px; max-width: 470px; margin: 10px auto 18px; }
   .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: transform .15s ease, background .15s ease; }
   .btn:hover { transform: translateY(-2px); }
