@@ -179,6 +179,22 @@ const CSS = `
   .loading-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
   .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--border2); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Mobile: cards 2 por linha (estilo e-commerce) */
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .featured-row { gap: 10px; }
+    .featured-row .card { min-width: 160px; }
+    .card-img { height: 115px; font-size: 40px; }
+    .card-body { padding: 11px 10px 13px; gap: 6px; }
+    .card-badge { font-size: 9px; padding: 3px 7px; }
+    .tag { font-size: 9.5px; padding: 2px 7px; }
+    .card-name { font-size: 13px; }
+    .card-console { font-size: 11px; }
+    .card-price { font-size: 17px; }
+    .card-stock { font-size: 10.5px; }
+    .card-actions .btn-sm { padding: 8px 6px; font-size: 10px; }
+  }
 `;
 
 // ─────────────────────────────────────────────
