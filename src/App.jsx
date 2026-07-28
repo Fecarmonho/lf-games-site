@@ -159,7 +159,7 @@ const CSS = `
   .empty-emoji { font-size: 46px; margin-bottom: 12px; }
 
   .footer { background: var(--surface); border-top: 1px solid var(--border); margin-top: 40px; }
-  .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px; padding: 56px 0 30px; min-width: 0; }
+  .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px; padding-top: 56px; padding-bottom: 30px; min-width: 0; }
   .footer-col { min-width: 0; }
   .footer-col h4 { font-size: 13px; color: var(--text2); letter-spacing: 1.5px; margin-bottom: 16px; text-transform: uppercase; }
   .footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
@@ -171,7 +171,7 @@ const CSS = `
   .map-frame { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border2); margin-top: 8px; width: 100%; max-width: 100%; }
   .map-frame iframe { width: 100%; max-width: 100%; height: 150px; border: 0; display: block; filter: grayscale(0.4) invert(0.92) contrast(0.9); }
   .footer-bottom { border-top: 1px solid var(--border); padding: 18px 0; text-align: center; font-size: 12px; color: var(--text2); }
-  @media (max-width: 820px) { .footer-grid { grid-template-columns: 1fr; gap: 30px; padding: 40px 0 20px; } }
+  @media (max-width: 820px) { .footer-grid { grid-template-columns: 1fr; gap: 30px; padding-top: 40px; padding-bottom: 20px; } }
 
   .whatsapp-float { position: fixed; bottom: 22px; right: 22px; z-index: 60; width: 58px; height: 58px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,211,102,0.45); font-size: 28px; }
   .whatsapp-float:hover { transform: scale(1.06); }
