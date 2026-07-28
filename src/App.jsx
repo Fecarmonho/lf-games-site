@@ -117,7 +117,7 @@ const CSS = `
   .btn-sm { padding: 9px 14px; font-size: 12.5px; }
   .btn-block { width: 100%; justify-content: center; }
 
-  .section { padding: 60px 0; }
+  .section { padding-top: 60px; padding-bottom: 60px; }
   .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 26px; flex-wrap: wrap; gap: 10px; }
   .section-title { font-size: 32px; }
   .section-sub { color: var(--text2); font-size: 14px; }
