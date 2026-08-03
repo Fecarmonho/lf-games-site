@@ -187,8 +187,39 @@ const CSS = `
   .stock-out { color: var(--gold); }
   .card-actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 8px; }
 
+  .card-click { cursor: pointer; }
+  .card-zoom { position: absolute; top: 10px; right: 10px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; background: rgba(9,9,11,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; font-size: 13px; opacity: 0; transition: opacity .15s ease; }
+  .card:hover .card-zoom { opacity: 1; }
+  @media (hover: none) { .card-zoom { opacity: 1; } }
+
   .empty { text-align: center; padding: 70px 20px; color: var(--text2); }
   .empty-emoji { font-size: 46px; margin-bottom: 12px; }
+
+  /* Detalhe do produto — abre ao clicar no card */
+  .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(5,5,7,0.82); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; } }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); width: 100%; max-width: 880px; max-height: calc(100vh - 48px); display: grid; grid-template-columns: 1.05fr 1fr; overflow: hidden; position: relative; animation: pop .18s ease; }
+  @keyframes pop { from { transform: scale(0.96); opacity: 0; } }
+  .modal-close { position: absolute; top: 12px; right: 12px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border2); background: rgba(9,9,11,0.75); color: var(--text); font-size: 17px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent2); }
+  .modal-foto { background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 90px; min-height: 300px; padding: 16px; }
+  .modal-foto img { width: 100%; height: 100%; max-height: calc(100vh - 80px); object-fit: contain; border-radius: var(--radius-sm); }
+  .modal-info { padding: 26px 26px 24px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .modal-nome { font-family: 'DM Sans', sans-serif; font-size: 21px; font-weight: 800; line-height: 1.25; padding-right: 34px; }
+  .modal-console { font-size: 13px; color: var(--text2); }
+  .modal-preco { font-size: 32px; font-weight: 800; margin-top: 2px; }
+  .modal-desc { font-size: 13.5px; color: var(--text2); line-height: 1.55; white-space: pre-wrap; }
+  .modal-acoes { display: flex; flex-direction: column; gap: 9px; margin-top: auto; padding-top: 14px; }
+
+  @media (max-width: 780px) {
+    .modal-overlay { padding: 0; align-items: stretch; }
+    .modal { grid-template-columns: 1fr; grid-template-rows: auto 1fr; max-width: none; max-height: 100vh; border-radius: 0; border: none; }
+    .modal-foto { min-height: 0; max-height: 46vh; padding: 12px; }
+    .modal-foto img { max-height: calc(46vh - 24px); }
+    .modal-info { padding: 18px 18px 22px; }
+    .modal-nome { font-size: 18px; }
+    .modal-preco { font-size: 27px; }
+  }
 
   /* Vitrine de consoles — a porta de entrada do catálogo */
   .console-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; }
@@ -293,12 +324,25 @@ function Hero() {
   );
 }
 
-function ProductCard({ p }) {
+function classeCondicao(condicao) {
+  if (condicao === "Novo") return "tag-cond-novo";
+  if (condicao === "Seminovo") return "tag-cond-seminovo";
+  return "tag-cond-usado";
+}
+
+function ProductCard({ p, onAbrir }) {
   const emStoque = (p.quantidadeEstoque || 0) > 0;
-  const condClass = p.condicao === "Novo" ? "tag-cond-novo" : p.condicao === "Seminovo" ? "tag-cond-seminovo" : "tag-cond-usado";
+  const condClass = classeCondicao(p.condicao);
   return (
-    <div className="card">
+    <div
+      className="card card-click"
+      role="button"
+      tabIndex={0}
+      onClick={() => onAbrir(p)}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onAbrir(p); } }}
+    >
       {p.destaque && <div className="card-badge">⭐ Destaque</div>}
+      <div className="card-zoom" aria-hidden="true">🔍</div>
       <div className="card-img">{p.imagem ? <img src={p.imagem} alt={p.nome} /> : "🎮"}</div>
       <div className="card-body">
         <div className="card-tags">
@@ -311,9 +355,56 @@ function ProductCard({ p }) {
         <div className={`card-stock ${emStoque ? "stock-ok" : "stock-out"}`}>
           {emStoque ? "✓ Em estoque" : "Sob encomenda"}
         </div>
-        <div className="card-actions">
+        {/* stopPropagation: clicar no botão fecha a venda, não abre o modal */}
+        <div className="card-actions" onClick={e => e.stopPropagation()}>
           <a className="btn btn-primary btn-sm btn-block" href={linkWhatsApp(p)} target="_blank" rel="noreferrer">💬 Comprar no WhatsApp</a>
           {p.linkML && <a className="btn btn-ml btn-sm btn-block" href={p.linkML} target="_blank" rel="noreferrer">Ver no Mercado Livre</a>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProdutoModal({ p, onFechar }) {
+  // Esc fecha e a página atrás não rola enquanto o modal está aberto.
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onFechar(); };
+    window.addEventListener("keydown", onKey);
+    const overflowAntes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflowAntes;
+    };
+  }, [onFechar]);
+
+  const emStoque = (p.quantidadeEstoque || 0) > 0;
+
+  return (
+    <div className="modal-overlay" onClick={onFechar} role="dialog" aria-modal="true" aria-label={p.nome}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onFechar} aria-label="Fechar">✕</button>
+        <div className="modal-foto">
+          {p.imagem ? <img src={p.imagem} alt={p.nome} /> : "🎮"}
+        </div>
+        <div className="modal-info">
+          <div className="card-tags">
+            {p.destaque && <span className="tag" style={{ background: "var(--gold)", color: "#1a1a1f" }}>⭐ Destaque</span>}
+            {p.categoria && <span className="tag tag-cat">{p.categoria}</span>}
+            {p.condicao && <span className={`tag ${classeCondicao(p.condicao)}`}>{p.condicao}</span>}
+          </div>
+          <div className="modal-nome">{p.nome}</div>
+          {p.console && p.console !== "Não se aplica" && <div className="modal-console">{p.console}</div>}
+          {p.marca && <div className="modal-console">Marca: {p.marca}</div>}
+          <div className="modal-preco">{formatBRL(p.precoVenda)}</div>
+          <div className={`card-stock ${emStoque ? "stock-ok" : "stock-out"}`}>
+            {emStoque ? "✓ Em estoque" : "Sob encomenda"}
+          </div>
+          {p.descricao && <p className="modal-desc">{p.descricao}</p>}
+          <div className="modal-acoes">
+            <a className="btn btn-primary btn-block" href={linkWhatsApp(p)} target="_blank" rel="noreferrer">💬 Comprar no WhatsApp</a>
+            {p.linkML && <a className="btn btn-ml btn-block" href={p.linkML} target="_blank" rel="noreferrer">Ver no Mercado Livre</a>}
+          </div>
         </div>
       </div>
     </div>
@@ -355,6 +446,7 @@ export default function App() {
   const [consoleAtivo, setConsoleAtivo] = useState(null);
   const [consoleRotulo, setConsoleRotulo] = useState("");
   const [busca, setBusca] = useState("");
+  const [idAberto, setIdAberto] = useState(null);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (u) => {
@@ -433,6 +525,13 @@ export default function App() {
 
   const destaques = useMemo(() => produtos.filter(p => p.destaque), [produtos]);
 
+  // Guarda o id, não o objeto: assim preço e estoque no modal acompanham o
+  // tempo real do ERP, e o modal fecha sozinho se o produto for excluído.
+  const produtoAberto = useMemo(
+    () => produtos.find(p => p.id === idAberto) || null,
+    [produtos, idAberto]
+  );
+
   const buscando = busca.trim().length > 0;
 
   const filtrados = useMemo(() => {
@@ -488,7 +587,7 @@ export default function App() {
             <div><h2 className="section-title">Destaques</h2><p className="section-sub">Selecionados pra você</p></div>
           </div>
           <div className="featured-row">
-            {destaques.map(p => <ProductCard key={p.id} p={p} />)}
+            {destaques.map(p => <ProductCard key={p.id} p={p} onAbrir={() => setIdAberto(p.id)} />)}
           </div>
         </div>
       )}
@@ -573,12 +672,14 @@ export default function App() {
               </div>
             ) : (
               <div className="grid">
-                {filtrados.map(p => <ProductCard key={p.id} p={p} />)}
+                {filtrados.map(p => <ProductCard key={p.id} p={p} onAbrir={() => setIdAberto(p.id)} />)}
               </div>
             )}
           </>
         )}
       </div>
+
+      {produtoAberto && <ProdutoModal p={produtoAberto} onFechar={() => setIdAberto(null)} />}
 
       <Footer />
 
