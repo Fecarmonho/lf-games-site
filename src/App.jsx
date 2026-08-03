@@ -348,6 +348,7 @@ function Footer() {
 
 export default function App() {
   const [produtos, setProdutos] = useState([]);
+  const [capas, setCapas] = useState({});
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState("todos");
@@ -369,6 +370,21 @@ export default function App() {
       setProdutos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
     }, () => setLoading(false));
+    return unsub;
+  }, [authReady]);
+
+  // Capas dos consoles, escolhidas no ERP em "Fotos do Site". Sem capa
+  // escolhida, o card cai na foto de um produto daquele console.
+  useEffect(() => {
+    if (!authReady) return;
+    const unsub = onSnapshot(collection(db, "siteFotos"), (snap) => {
+      const mapa = {};
+      snap.docs.forEach(d => {
+        const f = d.data();
+        if (f.tipo === "console" && f.chave && f.imagem) mapa[f.chave] = f.imagem;
+      });
+      setCapas(mapa);
+    }, () => { /* sem capa cadastrada: segue com a foto do produto */ });
     return unsub;
   }, [authReady]);
 
@@ -504,7 +520,9 @@ export default function App() {
               {consoles.map(c => (
                 <button key={c.chave} className="console-card" onClick={() => abrirConsole(c.chave, c.nome)}>
                   <div className="console-card-media">
-                    {c.imagem ? <img src={c.imagem} alt={c.nome} /> : emojiConsole(c.nome)}
+                    {capas[c.chave] || c.imagem
+                      ? <img src={capas[c.chave] || c.imagem} alt={c.nome} />
+                      : emojiConsole(c.nome)}
                   </div>
                   <div className="console-card-body">
                     <div className="console-card-nome">{c.nome}</div>
