@@ -36,6 +36,38 @@ const CATEGORIAS_PRODUTO = [
   "Acessórios", "Colecionáveis",
 ];
 
+// Produto sem console definido (acessório, cadeira, gift card) cai neste grupo,
+// para nada ficar escondido do cliente.
+const OUTROS = "Outros produtos";
+const TODOS = "__todos__";
+
+/**
+ * Chave de agrupamento do console, ignorando maiúsculas, acentos e espaços
+ * repetidos. No ERP o console é digitado à mão, então "Playstation 4" e
+ * "PlayStation 4" convivem no banco — sem isso o cliente veria dois cards
+ * iguais, cada um com parte dos produtos.
+ */
+function chaveConsole(p) {
+  const nome = (p.console || "").trim();
+  if (!nome || nome === "Não se aplica") return OUTROS;
+  return nome
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+/** Um emoji por família de console — só enfeite, quando não há foto. */
+function emojiConsole(nome) {
+  const n = nome.toLowerCase();
+  if (n.includes("playstation") || /\bps\d/.test(n)) return "🎮";
+  if (n.includes("xbox")) return "🟩";
+  if (n.includes("nintendo") || n.includes("switch") || n.includes("wii") || n.includes("3ds")) return "🔴";
+  if (n.includes("pc")) return "💻";
+  if (n === OUTROS.toLowerCase()) return "📦";
+  return "🕹️";
+}
+
 function formatBRL(v) {
   return (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -157,6 +189,31 @@ const CSS = `
 
   .empty { text-align: center; padding: 70px 20px; color: var(--text2); }
   .empty-emoji { font-size: 46px; margin-bottom: 12px; }
+
+  /* Vitrine de consoles — a porta de entrada do catálogo */
+  .console-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; }
+  .console-card { position: relative; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; transition: border-color .15s ease, transform .15s ease; }
+  .console-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .console-card-media { height: 120px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 46px; overflow: hidden; }
+  .console-card-media img { width: 100%; height: 100%; object-fit: cover; opacity: 0.75; }
+  .console-card:hover .console-card-media img { opacity: 1; }
+  .console-card-body { padding: 14px 16px 16px; }
+  .console-card-nome { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; line-height: 1.05; }
+  .console-card-qtd { font-size: 12.5px; color: var(--text2); margin-top: 3px; }
+  .console-card.todos .console-card-media { background: linear-gradient(135deg, rgba(255,45,77,0.25), rgba(62,166,255,0.18)); }
+
+  .voltar-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .btn-voltar { display: inline-flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); padding: 8px 15px; border-radius: 999px; font-size: 13px; cursor: pointer; font: inherit; }
+  .btn-voltar:hover { border-color: var(--accent); color: var(--text); }
+  .console-atual { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; }
+
+  @media (max-width: 640px) {
+    .console-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .console-card-media { height: 88px; font-size: 34px; }
+    .console-card-body { padding: 10px 11px 13px; }
+    .console-card-nome { font-size: 17px; }
+    .console-card-qtd { font-size: 11px; }
+  }
 
   .footer { background: var(--surface); border-top: 1px solid var(--border); margin-top: 40px; }
   .footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 40px; padding-top: 56px; padding-bottom: 30px; min-width: 0; }
@@ -294,6 +351,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState("todos");
+  const [consoleAtivo, setConsoleAtivo] = useState(null);
+  const [consoleRotulo, setConsoleRotulo] = useState("");
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
@@ -313,20 +372,81 @@ export default function App() {
     return unsub;
   }, [authReady]);
 
-  const categoriasComProduto = useMemo(() => {
-    const set = new Set(produtos.map(p => p.categoria).filter(Boolean));
-    return CATEGORIAS_PRODUTO.filter(c => set.has(c));
+  // Um card por console que realmente tem produto cadastrado. A foto do card
+  // é a de um produto daquele console — sem precisar cadastrar arte nenhuma.
+  const consoles = useMemo(() => {
+    const mapa = new Map();
+    for (const p of produtos) {
+      const chave = chaveConsole(p);
+      const atual = mapa.get(chave) || { chave, total: 0, imagem: null, grafias: new Map() };
+      atual.total += 1;
+      if (!atual.imagem && p.imagem) atual.imagem = p.imagem;
+      if (chave !== OUTROS) {
+        // Guarda como cada produto escreveu o nome; a grafia mais usada é a
+        // que aparece no card.
+        const escrito = (p.console || "").trim().replace(/\s+/g, " ");
+        atual.grafias.set(escrito, (atual.grafias.get(escrito) || 0) + 1);
+      }
+      mapa.set(chave, atual);
+    }
+    return [...mapa.values()]
+      .map(c => ({
+        ...c,
+        nome:
+          c.chave === OUTROS
+            ? OUTROS
+            : [...c.grafias.entries()].sort((a, b) => b[1] - a[1])[0][0],
+      }))
+      .sort((a, b) => {
+        if (a.chave === OUTROS) return 1; // "Outros" sempre por último
+        if (b.chave === OUTROS) return -1;
+        return b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR");
+      });
   }, [produtos]);
+
+  const doConsoleAtivo = useMemo(() => {
+    if (!consoleAtivo || consoleAtivo === TODOS) return produtos;
+    return produtos.filter(p => chaveConsole(p) === consoleAtivo);
+  }, [produtos, consoleAtivo]);
+
+  // As categorias mostradas são só as que existem dentro do console aberto.
+  const categoriasComProduto = useMemo(() => {
+    const set = new Set(doConsoleAtivo.map(p => p.categoria).filter(Boolean));
+    return CATEGORIAS_PRODUTO.filter(c => set.has(c));
+  }, [doConsoleAtivo]);
 
   const destaques = useMemo(() => produtos.filter(p => p.destaque), [produtos]);
 
+  const buscando = busca.trim().length > 0;
+
   const filtrados = useMemo(() => {
-    return produtos.filter(p => {
-      if (categoriaAtiva !== "todos" && p.categoria !== categoriaAtiva) return false;
-      if (busca.trim() && !p.nome?.toLowerCase().includes(busca.toLowerCase())) return false;
+    // Busca vale para a loja inteira: quem procura pelo nome não quer ser
+    // barrado pelo console que estava aberto.
+    const base = buscando ? produtos : doConsoleAtivo;
+    return base.filter(p => {
+      if (!buscando && categoriaAtiva !== "todos" && p.categoria !== categoriaAtiva) return false;
+      if (buscando && !p.nome?.toLowerCase().includes(busca.toLowerCase())) return false;
       return true;
     }).sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
-  }, [produtos, categoriaAtiva, busca]);
+  }, [produtos, doConsoleAtivo, categoriaAtiva, busca, buscando]);
+
+  // A vitrine de consoles é a tela inicial do catálogo: some ao escolher um
+  // console ou ao começar a buscar.
+  const mostrandoConsoles = !consoleAtivo && !buscando;
+
+  // Guarda a chave (para filtrar) e o nome bonito (para mostrar no topo).
+  function abrirConsole(chave, rotulo) {
+    setConsoleAtivo(chave);
+    setConsoleRotulo(rotulo || "");
+    setCategoriaAtiva("todos");
+  }
+
+  function voltarParaConsoles() {
+    setConsoleAtivo(null);
+    setConsoleRotulo("");
+    setCategoriaAtiva("todos");
+    setBusca("");
+  }
 
   if (loading) {
     return (
@@ -359,29 +479,86 @@ export default function App() {
 
       <div className="wrap section" id="catalogo">
         <div className="section-head" id="categorias">
-          <div><h2 className="section-title">Catálogo</h2><p className="section-sub">{filtrados.length} produto{filtrados.length !== 1 ? "s" : ""}</p></div>
+          <div>
+            <h2 className="section-title">Catálogo</h2>
+            <p className="section-sub">
+              {mostrandoConsoles
+                ? "Escolha o console para ver os produtos"
+                : `${filtrados.length} produto${filtrados.length !== 1 ? "s" : ""}`}
+            </p>
+          </div>
         </div>
 
         <div className="search-row">
           <input className="search-input" placeholder="🔍 Buscar produto..." value={busca} onChange={e => setBusca(e.target.value)} />
         </div>
 
-        <div className="chips">
-          <div className={`chip ${categoriaAtiva === "todos" ? "active" : ""}`} onClick={() => setCategoriaAtiva("todos")}>Todos</div>
-          {categoriasComProduto.map(c => (
-            <div key={c} className={`chip ${categoriaAtiva === c ? "active" : ""}`} onClick={() => setCategoriaAtiva(c)}>{c}</div>
-          ))}
-        </div>
+        {mostrandoConsoles ? (
+          consoles.length === 0 ? (
+            <div className="empty">
+              <div className="empty-emoji">🎮</div>
+              Nenhum produto cadastrado ainda.
+            </div>
+          ) : (
+            <div className="console-grid">
+              {consoles.map(c => (
+                <button key={c.chave} className="console-card" onClick={() => abrirConsole(c.chave, c.nome)}>
+                  <div className="console-card-media">
+                    {c.imagem ? <img src={c.imagem} alt={c.nome} /> : emojiConsole(c.nome)}
+                  </div>
+                  <div className="console-card-body">
+                    <div className="console-card-nome">{c.nome}</div>
+                    <div className="console-card-qtd">
+                      {c.total} produto{c.total !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                </button>
+              ))}
 
-        {filtrados.length === 0 ? (
-          <div className="empty">
-            <div className="empty-emoji">🎮</div>
-            {produtos.length === 0 ? "Nenhum produto cadastrado ainda." : "Nenhum produto encontrado para esse filtro."}
-          </div>
+              <button className="console-card todos" onClick={() => abrirConsole(TODOS, "Todos os produtos")}>
+                <div className="console-card-media">🛒</div>
+                <div className="console-card-body">
+                  <div className="console-card-nome">Ver tudo</div>
+                  <div className="console-card-qtd">
+                    {produtos.length} produto{produtos.length !== 1 ? "s" : ""} na loja
+                  </div>
+                </div>
+              </button>
+            </div>
+          )
         ) : (
-          <div className="grid">
-            {filtrados.map(p => <ProductCard key={p.id} p={p} />)}
-          </div>
+          <>
+            <div className="voltar-row">
+              <button className="btn-voltar" onClick={voltarParaConsoles}>← Todos os consoles</button>
+              <span className="console-atual">
+                {buscando
+                  ? `Busca: ${busca}`
+                  : consoleAtivo === TODOS
+                    ? "Todos os produtos"
+                    : consoleRotulo || consoleAtivo}
+              </span>
+            </div>
+
+            {!buscando && categoriasComProduto.length > 0 && (
+              <div className="chips">
+                <div className={`chip ${categoriaAtiva === "todos" ? "active" : ""}`} onClick={() => setCategoriaAtiva("todos")}>Todos</div>
+                {categoriasComProduto.map(c => (
+                  <div key={c} className={`chip ${categoriaAtiva === c ? "active" : ""}`} onClick={() => setCategoriaAtiva(c)}>{c}</div>
+                ))}
+              </div>
+            )}
+
+            {filtrados.length === 0 ? (
+              <div className="empty">
+                <div className="empty-emoji">🎮</div>
+                {produtos.length === 0 ? "Nenhum produto cadastrado ainda." : "Nenhum produto encontrado para esse filtro."}
+              </div>
+            ) : (
+              <div className="grid">
+                {filtrados.map(p => <ProductCard key={p.id} p={p} />)}
+              </div>
+            )}
+          </>
         )}
       </div>
 
